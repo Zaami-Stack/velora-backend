@@ -120,4 +120,106 @@ router.get("/users", auth, adminOnly, async (req, res) => {
   }
 });
 
+// GET /api/admin/products
+router.get("/products", auth, adminOnly, async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT p.*, GROUP_CONCAT(pc.color_hex) AS colors
+      FROM products p
+      LEFT JOIN product_colors pc ON p.id = pc.product_id
+      GROUP BY p.id
+      ORDER BY p.id ASC
+    `);
+    const products = rows.map((r) => ({
+      ...r,
+      colors: r.colors ? r.colors.split(",") : [],
+    }));
+    res.json(products);
+  } catch (err) {
+    console.error("Admin products list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST /api/admin/products
+router.post("/products", auth, adminOnly, async (req, res) => {
+  try {
+    const { name, category, price, original_price, image, badge, rating, reviews, description, colors } = req.body;
+
+    if (!name || !category || !price || !image) {
+      return res.status(400).json({ error: "Name, category, price, and image are required" });
+    }
+
+    const [[{ maxId }]] = await pool.query("SELECT COALESCE(MAX(id), 0) AS maxId FROM products");
+    const newId = maxId + 1;
+
+    await pool.query(
+      "INSERT INTO products (id, name, category, price, original_price, image, badge, rating, reviews, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [newId, name, category, price, original_price || null, image, badge || null, rating || 0, reviews || 0, description || null]
+    );
+
+    if (colors && colors.length > 0) {
+      const colorValues = colors.map((c) => [newId, c]);
+      await pool.query("INSERT INTO product_colors (product_id, color_hex) VALUES ?", [colorValues]);
+    }
+
+    const [rows] = await pool.query("SELECT * FROM products WHERE id = ?", [newId]);
+    const [colorRows] = await pool.query("SELECT color_hex FROM product_colors WHERE product_id = ?", [newId]);
+
+    res.status(201).json({ ...rows[0], colors: colorRows.map((c) => c.color_hex) });
+  } catch (err) {
+    console.error("Admin product create error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// PUT /api/admin/products/:id
+router.put("/products/:id", auth, adminOnly, async (req, res) => {
+  try {
+    const { name, category, price, original_price, image, badge, rating, reviews, description, colors } = req.body;
+    const { id } = req.params;
+
+    const [existing] = await pool.query("SELECT id FROM products WHERE id = ?", [id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Product not found" });
+
+    await pool.query(
+      "UPDATE products SET name = ?, category = ?, price = ?, original_price = ?, image = ?, badge = ?, rating = ?, reviews = ?, description = ? WHERE id = ?",
+      [name, category, price, original_price || null, image, badge || null, rating || 0, reviews || 0, description || null, id]
+    );
+
+    if (colors && Array.isArray(colors)) {
+      await pool.query("DELETE FROM product_colors WHERE product_id = ?", [id]);
+      if (colors.length > 0) {
+        const colorValues = colors.map((c) => [id, c]);
+        await pool.query("INSERT INTO product_colors (product_id, color_hex) VALUES ?", [colorValues]);
+      }
+    }
+
+    const [rows] = await pool.query("SELECT * FROM products WHERE id = ?", [id]);
+    const [colorRows] = await pool.query("SELECT color_hex FROM product_colors WHERE product_id = ?", [id]);
+
+    res.json({ ...rows[0], colors: colorRows.map((c) => c.color_hex) });
+  } catch (err) {
+    console.error("Admin product update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// DELETE /api/admin/products/:id
+router.delete("/products/:id", auth, adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [existing] = await pool.query("SELECT id FROM products WHERE id = ?", [id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Product not found" });
+
+    await pool.query("DELETE FROM product_colors WHERE product_id = ?", [id]);
+    await pool.query("DELETE FROM products WHERE id = ?", [id]);
+
+    res.json({ message: "Product deleted" });
+  } catch (err) {
+    console.error("Admin product delete error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;
