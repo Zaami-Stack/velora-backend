@@ -1,0 +1,659 @@
+[
+  {
+    "id": 1,
+    "name": "Oversized Wool Blazer",
+    "category": "Blazers",
+    "price": 189,
+    "originalPrice": 249,
+    "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop",
+    "badge": "Sale",
+    "colors": [
+      "#1a1a1a",
+      "#8B7355",
+      "#F5F5DC"
+    ],
+    "rating": 4.5,
+    "reviews": 128,
+    "description": "A luxurious oversized wool blazer perfect for layering."
+  },
+  {
+    "id": 2,
+    "name": "Silk Midi Dress",
+    "category": "Dresses",
+    "price": 129,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#C41E3A",
+      "#1a1a1a"
+    ],
+    "rating": 4.8,
+    "reviews": 95,
+    "description": "Elegant silk midi dress with a flowing silhouette."
+  },
+  {
+    "id": 3,
+    "name": "High-Rise Straight Jeans",
+    "category": "Pants",
+    "price": 79,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#4A6FA5",
+      "#1a1a1a",
+      "#808080"
+    ],
+    "rating": 4.3,
+    "reviews": 210,
+    "description": "Classic high-rise straight leg jeans in premium denim."
+  },
+  {
+    "id": 4,
+    "name": "Cashmere Knit Sweater",
+    "category": "Knitwear",
+    "price": 159,
+    "originalPrice": 199,
+    "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=800&fit=crop",
+    "badge": "New",
+    "colors": [
+      "#F5F5DC",
+      "#8B7355"
+    ],
+    "rating": 4.7,
+    "reviews": 67,
+    "description": "Soft cashmere knit sweater for ultimate comfort."
+  },
+  {
+    "id": 5,
+    "name": "Leather Crossbody Bag",
+    "category": "Bags",
+    "price": 219,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#8B4513"
+    ],
+    "rating": 4.6,
+    "reviews": 143,
+    "description": "Premium leather crossbody bag with adjustable strap."
+  },
+  {
+    "id": 6,
+    "name": "Pleated Maxi Skirt",
+    "category": "Pants",
+    "price": 99,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#2F4F4F"
+    ],
+    "rating": 4.4,
+    "reviews": 82,
+    "description": "Flowing pleated maxi skirt for a chic look."
+  },
+  {
+    "id": 7,
+    "name": "Linen Blend Shirt",
+    "category": "Tops",
+    "price": 69,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#FFFFFF",
+      "#87CEEB",
+      "#F5F5DC"
+    ],
+    "rating": 4.2,
+    "reviews": 156,
+    "description": "Breathable linen blend shirt for warm days."
+  },
+  {
+    "id": 8,
+    "name": "Pointed-Toe Mules",
+    "category": "Shoes",
+    "price": 139,
+    "originalPrice": 179,
+    "image": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&h=800&fit=crop",
+    "badge": "Sale",
+    "colors": [
+      "#1a1a1a",
+      "#8B4513"
+    ],
+    "rating": 4.5,
+    "reviews": 91,
+    "description": "Sleek pointed-toe mules with a comfortable heel."
+  },
+  {
+    "id": 9,
+    "name": "Structured Tote Bag",
+    "category": "Bags",
+    "price": 169,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#F5F5DC",
+      "#1a1a1a"
+    ],
+    "rating": 4.9,
+    "reviews": 204,
+    "description": "Spacious structured tote for everyday essentials."
+  },
+  {
+    "id": 10,
+    "name": "Wide Leg Trousers",
+    "category": "Pants",
+    "price": 89,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#808080",
+      "#2F4F4F"
+    ],
+    "rating": 4.1,
+    "reviews": 73,
+    "description": "Tailored wide leg trousers for a polished look."
+  },
+  {
+    "id": 11,
+    "name": "Draped Satin Blouse",
+    "category": "Tops",
+    "price": 79,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#C41E3A",
+      "#1a1a1a",
+      "#F5F5DC"
+    ],
+    "rating": 4.6,
+    "reviews": 118,
+    "description": "Luxurious draped satin blouse with elegant drape."
+  },
+  {
+    "id": 12,
+    "name": "Suede Ankle Boots",
+    "category": "Shoes",
+    "price": 199,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1542840410-3092f99611a3?w=600&h=800&fit=crop",
+    "badge": "New",
+    "colors": [
+      "#8B4513",
+      "#1a1a1a"
+    ],
+    "rating": 4.8,
+    "reviews": 167,
+    "description": "Premium suede ankle boots with a stacked heel."
+  },
+  {
+    "id": 13,
+    "name": "Ribbed Knit Cardigan",
+    "category": "Knitwear",
+    "price": 119,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#8B7355",
+      "#F5F5DC"
+    ],
+    "rating": 4.3,
+    "reviews": 54,
+    "description": "Cozy ribbed knit cardigan for layering."
+  },
+  {
+    "id": 14,
+    "name": "Tailored Crop Jacket",
+    "category": "Blazers",
+    "price": 149,
+    "originalPrice": 199,
+    "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop",
+    "badge": "Sale",
+    "colors": [
+      "#1a1a1a",
+      "#2F4F4F"
+    ],
+    "rating": 4.7,
+    "reviews": 89,
+    "description": "Modern tailored crop jacket with clean lines."
+  },
+  {
+    "id": 15,
+    "name": "Floral Wrap Dress",
+    "category": "Dresses",
+    "price": 109,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop",
+    "badge": "New",
+    "colors": [
+      "#C41E3A",
+      "#1a1a1a"
+    ],
+    "rating": 4.9,
+    "reviews": 42,
+    "description": "Beautiful floral wrap dress for any occasion."
+  },
+  {
+    "id": 16,
+    "name": "Canvas Sneakers",
+    "category": "Shoes",
+    "price": 59,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1542840410-3092f99611a3?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#FFFFFF",
+      "#1a1a1a"
+    ],
+    "rating": 4.4,
+    "reviews": 231,
+    "description": "Minimalist canvas sneakers for everyday wear."
+  },
+  {
+    "id": 17,
+    "name": "Merino Turtleneck",
+    "category": "Knitwear",
+    "price": 99,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#F5F5DC",
+      "#808080"
+    ],
+    "rating": 4.6,
+    "reviews": 88,
+    "description": "Fine merino turtleneck for effortless layering."
+  },
+  {
+    "id": 18,
+    "name": "Linen Wrap Top",
+    "category": "Tops",
+    "price": 59,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=600&h=800&fit=crop",
+    "badge": "New",
+    "colors": [
+      "#F5F5DC",
+      "#1a1a1a"
+    ],
+    "rating": 4.4,
+    "reviews": 63,
+    "description": "Breezy linen wrap top for summer days."
+  },
+  {
+    "id": 19,
+    "name": "Quilted Puffer Vest",
+    "category": "Blazers",
+    "price": 139,
+    "originalPrice": 179,
+    "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop",
+    "badge": "Sale",
+    "colors": [
+      "#1a1a1a",
+      "#2F4F4F",
+      "#8B7355"
+    ],
+    "rating": 4.5,
+    "reviews": 76,
+    "description": "Lightweight quilted vest for transitional weather."
+  },
+  {
+    "id": 20,
+    "name": "Cotton Poplin Dress",
+    "category": "Dresses",
+    "price": 89,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#FFFFFF",
+      "#87CEEB",
+      "#1a1a1a"
+    ],
+    "rating": 4.7,
+    "reviews": 134,
+    "description": "Crisp cotton poplin dress with a relaxed fit."
+  },
+  {
+    "id": 21,
+    "name": "Slim Chinos",
+    "category": "Pants",
+    "price": 69,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#8B7355",
+      "#1a1a1a",
+      "#4A6FA5"
+    ],
+    "rating": 4.3,
+    "reviews": 187,
+    "description": "Versatile slim chinos for smart-casual styling."
+  },
+  {
+    "id": 22,
+    "name": "Strappy Heel Sandals",
+    "category": "Shoes",
+    "price": 149,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&h=800&fit=crop",
+    "badge": "New",
+    "colors": [
+      "#1a1a1a",
+      "#F5F5DC"
+    ],
+    "rating": 4.8,
+    "reviews": 52,
+    "description": "Elegant strappy sandals with a stiletto heel."
+  },
+  {
+    "id": 23,
+    "name": "Wool Tailored Coat",
+    "category": "Blazers",
+    "price": 289,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#8B7355"
+    ],
+    "rating": 4.9,
+    "reviews": 112,
+    "description": "Timeless wool coat tailored for a clean silhouette."
+  },
+  {
+    "id": 24,
+    "name": "Patchwork Denim Jacket",
+    "category": "Blazers",
+    "price": 119,
+    "originalPrice": 159,
+    "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop",
+    "badge": "Sale",
+    "colors": [
+      "#4A6FA5",
+      "#1a1a1a"
+    ],
+    "rating": 4.4,
+    "reviews": 67,
+    "description": "Vintage-inspired patchwork denim jacket."
+  },
+  {
+    "id": 25,
+    "name": "Ribbed Knit Dress",
+    "category": "Dresses",
+    "price": 99,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#8B7355",
+      "#2F4F4F"
+    ],
+    "rating": 4.6,
+    "reviews": 91,
+    "description": "Figure-hugging ribbed knit dress for evening or day."
+  },
+  {
+    "id": 26,
+    "name": "Cropped Knit Top",
+    "category": "Tops",
+    "price": 45,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#F5F5DC",
+      "#C41E3A",
+      "#1a1a1a"
+    ],
+    "rating": 4.2,
+    "reviews": 143,
+    "description": "Casual cropped knit top with a relaxed feel."
+  },
+  {
+    "id": 27,
+    "name": "Leather Loafers",
+    "category": "Shoes",
+    "price": 169,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#8B4513"
+    ],
+    "rating": 4.7,
+    "reviews": 198,
+    "description": "Polished leather loafers with a chunky sole."
+  },
+  {
+    "id": 28,
+    "name": "Pleated Wool Trousers",
+    "category": "Pants",
+    "price": 109,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=600&h=800&fit=crop",
+    "badge": "New",
+    "colors": [
+      "#1a1a1a",
+      "#808080"
+    ],
+    "rating": 4.5,
+    "reviews": 56,
+    "description": "Sharp pleated trousers in soft wool blend."
+  },
+  {
+    "id": 29,
+    "name": "Chain Link Bracelet",
+    "category": "Accessories",
+    "price": 49,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#C0C0C0",
+      "#FFD700"
+    ],
+    "rating": 4.3,
+    "reviews": 74,
+    "description": "Bold chain link bracelet in polished metal."
+  },
+  {
+    "id": 30,
+    "name": "Silk Scarf",
+    "category": "Accessories",
+    "price": 59,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#C41E3A",
+      "#4A6FA5",
+      "#1a1a1a"
+    ],
+    "rating": 4.8,
+    "reviews": 109,
+    "description": "Luxurious silk scarf with a bold print."
+  },
+  {
+    "id": 31,
+    "name": "Structured Bucket Bag",
+    "category": "Bags",
+    "price": 149,
+    "originalPrice": 189,
+    "image": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&h=800&fit=crop",
+    "badge": "Sale",
+    "colors": [
+      "#1a1a1a",
+      "#8B4513",
+      "#F5F5DC"
+    ],
+    "rating": 4.5,
+    "reviews": 82,
+    "description": "Sleek bucket bag with a drawstring closure."
+  },
+  {
+    "id": 32,
+    "name": "Woven Straw Tote",
+    "category": "Bags",
+    "price": 79,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?w=600&h=800&fit=crop",
+    "badge": "New",
+    "colors": [
+      "#D2B48C"
+    ],
+    "rating": 4.4,
+    "reviews": 46,
+    "description": "Handwoven straw tote for beach and beyond."
+  },
+  {
+    "id": 33,
+    "name": "Oversized T-Shirt",
+    "category": "Tops",
+    "price": 35,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#FFFFFF",
+      "#1a1a1a",
+      "#808080"
+    ],
+    "rating": 4.1,
+    "reviews": 312,
+    "description": "Premium cotton oversized tee in a relaxed fit."
+  },
+  {
+    "id": 34,
+    "name": "Velvet Blazer",
+    "category": "Blazers",
+    "price": 209,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#800020",
+      "#2F4F4F"
+    ],
+    "rating": 4.8,
+    "reviews": 61,
+    "description": "Rich velvet blazer for evening occasions."
+  },
+  {
+    "id": 35,
+    "name": "Printed Maxi Dress",
+    "category": "Dresses",
+    "price": 139,
+    "originalPrice": 179,
+    "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop",
+    "badge": "Sale",
+    "colors": [
+      "#C41E3A",
+      "#4A6FA5"
+    ],
+    "rating": 4.7,
+    "reviews": 73,
+    "description": "Bold printed maxi dress with a tiered skirt."
+  },
+  {
+    "id": 36,
+    "name": "Leather Belt",
+    "category": "Accessories",
+    "price": 39,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#8B4513"
+    ],
+    "rating": 4.5,
+    "reviews": 221,
+    "description": "Classic leather belt with a brushed silver buckle."
+  },
+  {
+    "id": 37,
+    "name": "Cashmere Beanie",
+    "category": "Accessories",
+    "price": 45,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#1a1a1a",
+      "#8B7355",
+      "#808080"
+    ],
+    "rating": 4.6,
+    "reviews": 98,
+    "description": "Soft cashmere beanie for cold-weather days."
+  },
+  {
+    "id": 38,
+    "name": "Knee-High Boots",
+    "category": "Shoes",
+    "price": 249,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1542840410-3092f99611a3?w=600&h=800&fit=crop",
+    "badge": "New",
+    "colors": [
+      "#1a1a1a",
+      "#8B4513"
+    ],
+    "rating": 4.9,
+    "reviews": 34,
+    "description": "Statement knee-high boots in smooth leather."
+  },
+  {
+    "id": 39,
+    "name": "Alpaca Wool Scarf",
+    "category": "Accessories",
+    "price": 69,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#F5F5DC",
+      "#8B7355",
+      "#1a1a1a"
+    ],
+    "rating": 4.7,
+    "reviews": 85,
+    "description": "Ultra-soft alpaca scarf for cozy layering."
+  },
+  {
+    "id": 40,
+    "name": "Cropped Cardigan",
+    "category": "Knitwear",
+    "price": 89,
+    "originalPrice": null,
+    "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=800&fit=crop",
+    "badge": null,
+    "colors": [
+      "#F5F5DC",
+      "#C41E3A",
+      "#1a1a1a"
+    ],
+    "rating": 4.4,
+    "reviews": 117,
+    "description": "Vintage-inspired cropped cardigan with pearl buttons."
+  }
+]
