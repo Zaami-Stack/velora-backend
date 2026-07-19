@@ -62,31 +62,31 @@ function generateSecret() {
 // POST /api/auth/register
 router.post("/register", authLimiter, registerRules, async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, securityQuestion, securityAnswer } = req.body;
 
     const [existing] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existing.length > 0) {
       return res.status(409).json({ error: "Account already exists with this email" });
     }
 
+    if (!securityQuestion || !securityAnswer || !securityAnswer.trim()) {
+      return res.status(400).json({ error: "Security question and answer are required" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 12);
     const id = uuidv4();
-
-    // Generate secret and hash it
-    const secret = generateSecret();
-    const secretHash = await bcrypt.hash(secret, 10);
+    const securityAnswerHash = await bcrypt.hash(securityAnswer.trim().toLowerCase(), 10);
 
     await pool.query(
-      "INSERT INTO users (id, name, email, password, secret_hash, phone) VALUES (?, ?, ?, ?, ?, ?)",
-      [id, name, email, hashedPassword, secretHash, phone || null]
+      "INSERT INTO users (id, name, email, password, phone, security_question, security_answer_hash) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [id, name, email, hashedPassword, phone || null, securityQuestion, securityAnswerHash]
     );
 
     const token = generateToken({ id, name, email, is_admin: 0 });
 
-    // Secret is returned ONCE — never stored in plain text, never returned again
     console.log(`[REGISTER] New user registered: ${email}`);
 
-    res.status(201).json({ token, user: { id, name, email, is_admin: 0, phone: phone || null }, secret });
+    res.status(201).json({ token, user: { id, name, email, is_admin: 0, phone: phone || null } });
   } catch (err) {
     console.error("Register error:", err);
     res.status(500).json({ error: "Server error" });
@@ -142,12 +142,30 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
-// POST /api/auth/reset-password — requires email + secret + new password
+// POST /api/auth/forgot-password — step 1: get the security question for an email
+router.post("/forgot-password", authLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    const [rows] = await pool.query("SELECT security_question FROM users WHERE email = ?", [email]);
+    if (rows.length === 0 || !rows[0].security_question) {
+      return res.status(404).json({ error: "No account found with this email" });
+    }
+
+    res.json({ securityQuestion: rows[0].security_question });
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST /api/auth/reset-password — step 2: verify answer + set new password
 router.post("/reset-password", authLimiter, async (req, res) => {
   try {
-    const { email, secret, password } = req.body;
-    if (!email || !secret || !password) {
-      return res.status(400).json({ error: "Email, secret, and new password are required" });
+    const { email, answer, password } = req.body;
+    if (!email || !answer || !password) {
+      return res.status(400).json({ error: "Email, security answer, and new password are required" });
     }
     if (password.length < 6 || password.length > 128) {
       return res.status(400).json({ error: "Password must be 6-128 characters" });
@@ -155,23 +173,20 @@ router.post("/reset-password", authLimiter, async (req, res) => {
 
     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     if (rows.length === 0) {
-      return res.status(400).json({ error: "Invalid email or secret" });
+      return res.status(400).json({ error: "Invalid email or answer" });
     }
 
     const user = rows[0];
 
-    // Check if user has a secret set
-    if (!user.secret_hash) {
-      return res.status(400).json({ error: "No recovery secret set for this account. Contact support." });
+    if (!user.security_answer_hash) {
+      return res.status(400).json({ error: "No security question set for this account. Contact support." });
     }
 
-    // Verify the secret
-    const secretValid = await bcrypt.compare(secret, user.secret_hash);
-    if (!secretValid) {
-      return res.status(400).json({ error: "Invalid email or secret" });
+    const answerValid = await bcrypt.compare(answer.trim().toLowerCase(), user.security_answer_hash);
+    if (!answerValid) {
+      return res.status(400).json({ error: "Incorrect answer. Please try again." });
     }
 
-    // Update password
     const hashedPassword = await bcrypt.hash(password, 12);
     await pool.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, user.id]);
 

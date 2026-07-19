@@ -30,6 +30,8 @@ async function initDB() {
         email VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         secret_hash VARCHAR(255) NULL,
+        security_question VARCHAR(255) NULL,
+        security_answer_hash VARCHAR(255) NULL,
         is_admin TINYINT(1) NOT NULL DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -40,6 +42,8 @@ async function initDB() {
     try { await conn.query("ALTER TABLE users ADD COLUMN secret_hash VARCHAR(255) NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE users MODIFY COLUMN id VARCHAR(36) NOT NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE users ADD COLUMN phone VARCHAR(30) NULL"); } catch (e) {}
+    try { await conn.query("ALTER TABLE users ADD COLUMN security_question VARCHAR(255) NULL"); } catch (e) {}
+    try { await conn.query("ALTER TABLE users ADD COLUMN security_answer_hash VARCHAR(255) NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE orders MODIFY COLUMN user_id VARCHAR(36) NOT NULL"); } catch (e) {}
 
     // Drop old password_resets table if it exists
