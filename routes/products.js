@@ -11,8 +11,7 @@ router.get("/", productListRules, async (req, res) => {
     const { category, search, sort, minPrice, maxPrice, badge } = req.query;
 
     let sql = `
-      SELECT p.*,
-        IFNULL((SELECT GROUP_CONCAT(pc.color_hex) FROM product_colors pc WHERE pc.product_id = p.id), '') AS colors
+      SELECT p.*
       FROM products p
     `;
     const conditions = [];
@@ -57,10 +56,13 @@ router.get("/", productListRules, async (req, res) => {
     }
 
     const [rows] = await pool.query(sql, params);
-    const products = rows.map((r) => ({
-      ...r,
-      colors: r.colors ? r.colors.split(",") : [],
-    }));
+    const [allColors] = await pool.query("SELECT product_id, color_hex, image FROM product_colors");
+    const colorMap = {};
+    allColors.forEach((c) => {
+      if (!colorMap[c.product_id]) colorMap[c.product_id] = [];
+      colorMap[c.product_id].push({ hex: c.color_hex, image: c.image || null });
+    });
+    const products = rows.map((r) => ({ ...r, colors: colorMap[r.id] || [] }));
 
     res.json({ products, total: products.length });
   } catch (err) {
@@ -89,10 +91,10 @@ router.get("/:id", productIdRules, async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ error: "Product not found" });
 
     const [colors] = await pool.query(
-      "SELECT color_hex FROM product_colors WHERE product_id = ?",
+      "SELECT color_hex, image FROM product_colors WHERE product_id = ?",
       [req.params.id]
     );
-    const product = { ...rows[0], colors: colors.map((c) => c.color_hex) };
+    const product = { ...rows[0], colors: colors.map((c) => ({ hex: c.color_hex, image: c.image || null })) };
 
     res.json(product);
   } catch (err) {

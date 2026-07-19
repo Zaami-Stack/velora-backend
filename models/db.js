@@ -50,6 +50,9 @@ async function initDB() {
     // Drop old password_resets table if it exists
     try { await conn.query("DROP TABLE IF EXISTS password_resets"); } catch (e) {}
 
+    // Migration: add image column to product_colors
+    try { await conn.query("ALTER TABLE product_colors ADD COLUMN image TEXT NULL"); } catch (e) {}
+
     await conn.query(`
       CREATE TABLE IF NOT EXISTS products (
         id INT PRIMARY KEY,

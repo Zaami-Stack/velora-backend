@@ -123,16 +123,14 @@ router.get("/users", auth, adminOnly, async (req, res) => {
 // GET /api/admin/products
 router.get("/products", auth, adminOnly, async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT p.*,
-        IFNULL((SELECT GROUP_CONCAT(pc.color_hex) FROM product_colors pc WHERE pc.product_id = p.id), '') AS colors
-      FROM products p
-      ORDER BY p.id ASC
-    `);
-    const products = rows.map((r) => ({
-      ...r,
-      colors: r.colors ? r.colors.split(",") : [],
-    }));
+    const [rows] = await pool.query("SELECT p.* FROM products p ORDER BY p.id ASC");
+    const [allColors] = await pool.query("SELECT product_id, color_hex, image FROM product_colors");
+    const colorMap = {};
+    allColors.forEach((c) => {
+      if (!colorMap[c.product_id]) colorMap[c.product_id] = [];
+      colorMap[c.product_id].push({ hex: c.color_hex, image: c.image || null });
+    });
+    const products = rows.map((p) => ({ ...p, colors: colorMap[p.id] || [] }));
     res.json(products);
   } catch (err) {
     console.error("Admin products list error:", err);
@@ -158,14 +156,20 @@ router.post("/products", auth, adminOnly, async (req, res) => {
     );
 
     if (colors && colors.length > 0) {
-      const colorValues = colors.map((c) => [newId, c]);
-      await pool.query("INSERT INTO product_colors (product_id, color_hex) VALUES ?", [colorValues]);
+      const colorValues = colors.map((c) => {
+        if (typeof c === "string") return [newId, c, null];
+        return [newId, c.hex, c.image || null];
+      });
+      await pool.query("INSERT INTO product_colors (product_id, color_hex, image) VALUES ?", [colorValues]);
     }
 
     const [rows] = await pool.query("SELECT * FROM products WHERE id = ?", [newId]);
-    const [colorRows] = await pool.query("SELECT color_hex FROM product_colors WHERE product_id = ?", [newId]);
+    const [colorRows] = await pool.query("SELECT color_hex, image FROM product_colors WHERE product_id = ?", [newId]);
 
-    res.status(201).json({ ...rows[0], colors: colorRows.map((c) => c.color_hex) });
+    res.status(201).json({
+      ...rows[0],
+      colors: colorRows.map((c) => ({ hex: c.color_hex, image: c.image || null })),
+    });
   } catch (err) {
     console.error("Admin product create error:", err);
     res.status(500).json({ error: "Server error" });
@@ -189,15 +193,21 @@ router.put("/products/:id", auth, adminOnly, async (req, res) => {
     if (colors && Array.isArray(colors)) {
       await pool.query("DELETE FROM product_colors WHERE product_id = ?", [id]);
       if (colors.length > 0) {
-        const colorValues = colors.map((c) => [id, c]);
-        await pool.query("INSERT INTO product_colors (product_id, color_hex) VALUES ?", [colorValues]);
+        const colorValues = colors.map((c) => {
+          if (typeof c === "string") return [id, c, null];
+          return [id, c.hex, c.image || null];
+        });
+        await pool.query("INSERT INTO product_colors (product_id, color_hex, image) VALUES ?", [colorValues]);
       }
     }
 
     const [rows] = await pool.query("SELECT * FROM products WHERE id = ?", [id]);
-    const [colorRows] = await pool.query("SELECT color_hex FROM product_colors WHERE product_id = ?", [id]);
+    const [colorRows] = await pool.query("SELECT color_hex, image FROM product_colors WHERE product_id = ?", [id]);
 
-    res.json({ ...rows[0], colors: colorRows.map((c) => c.color_hex) });
+    res.json({
+      ...rows[0],
+      colors: colorRows.map((c) => ({ hex: c.color_hex, image: c.image || null })),
+    });
   } catch (err) {
     console.error("Admin product update error:", err);
     res.status(500).json({ error: "Server error" });
