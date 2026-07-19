@@ -44,21 +44,6 @@ function generateToken(user) {
   );
 }
 
-function generateSecret() {
-  const words = [
-    "apple", "river", "stone", "cloud", "tiger", "ocean", "flame", "eagle",
-    "coral", "amber", "cedar", "maple", "pearl", "crystal", "dawn", "storm",
-    "falcon", "willow", "breeze", "ember", "frost", "blaze", "quartz", "ivory",
-    "sage", "raven", "onyx", "ruby", "jade", "iron", "scarlet", "velvet",
-  ];
-  const parts = [];
-  for (let i = 0; i < 3; i++) {
-    parts.push(words[Math.floor(Math.random() * words.length)]);
-  }
-  const num = Math.floor(100 + Math.random() * 900);
-  return `${parts.join("-")}-${num}`;
-}
-
 // POST /api/auth/register
 router.post("/register", authLimiter, registerRules, async (req, res) => {
   try {
