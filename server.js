@@ -77,6 +77,8 @@ initDB()
     });
   })
   .catch((err) => {
-    console.error("Failed to initialize database:", err);
-    process.exit(1);
+    console.error("DB init failed, starting server anyway:", err.message);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Velora API running (DB offline) on http://0.0.0.0:${PORT}`);
+    });
   });

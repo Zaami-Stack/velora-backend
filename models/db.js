@@ -13,7 +13,7 @@ const dbConfig = {
 
 if (process.env.DB_SSL === "true") {
   dbConfig.ssl = {
-    rejectUnauthorized: true,
+    rejectUnauthorized: false,
   };
 }
 
