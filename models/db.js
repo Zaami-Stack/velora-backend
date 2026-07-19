@@ -12,11 +12,7 @@ const dbConfig = {
 };
 
 if (process.env.DB_SSL === "true") {
-  const fs = require("fs");
   dbConfig.ssl = {
-    ca: process.env.DB_SSL_CA
-      ? fs.readFileSync(process.env.DB_SSL_CA)
-      : undefined,
     rejectUnauthorized: true,
   };
 }
