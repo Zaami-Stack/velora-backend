@@ -42,6 +42,7 @@ async function initDB() {
     try { await conn.query("ALTER TABLE users ADD COLUMN secret_hash VARCHAR(255) NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE users MODIFY COLUMN id VARCHAR(36) NOT NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE users ADD COLUMN phone VARCHAR(30) NULL"); } catch (e) {}
+    try { await conn.query("ALTER TABLE users ADD COLUMN secret_hash VARCHAR(255) NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE users ADD COLUMN security_question VARCHAR(255) NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE users ADD COLUMN security_answer_hash VARCHAR(255) NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE orders MODIFY COLUMN user_id VARCHAR(36) NOT NULL"); } catch (e) {}

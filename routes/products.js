@@ -11,9 +11,9 @@ router.get("/", productListRules, async (req, res) => {
     const { category, search, sort, minPrice, maxPrice, badge } = req.query;
 
     let sql = `
-      SELECT p.*, GROUP_CONCAT(pc.color_hex) AS colors
+      SELECT p.*,
+        IFNULL((SELECT GROUP_CONCAT(pc.color_hex) FROM product_colors pc WHERE pc.product_id = p.id), '') AS colors
       FROM products p
-      LEFT JOIN product_colors pc ON p.id = pc.product_id
     `;
     const conditions = [];
     const params = [];
@@ -47,8 +47,6 @@ router.get("/", productListRules, async (req, res) => {
     if (conditions.length > 0) {
       sql += " WHERE " + conditions.join(" AND ");
     }
-
-    sql += " GROUP BY p.id";
 
     switch (sort) {
       case "price_asc": sql += " ORDER BY p.price ASC"; break;

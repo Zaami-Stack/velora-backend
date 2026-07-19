@@ -124,10 +124,9 @@ router.get("/users", auth, adminOnly, async (req, res) => {
 router.get("/products", auth, adminOnly, async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT p.*, GROUP_CONCAT(pc.color_hex) AS colors
+      SELECT p.*,
+        IFNULL((SELECT GROUP_CONCAT(pc.color_hex) FROM product_colors pc WHERE pc.product_id = p.id), '') AS colors
       FROM products p
-      LEFT JOIN product_colors pc ON p.id = pc.product_id
-      GROUP BY p.id
       ORDER BY p.id ASC
     `);
     const products = rows.map((r) => ({
