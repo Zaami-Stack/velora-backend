@@ -28,7 +28,7 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
@@ -62,6 +62,11 @@ app.get("/api/health", async (req, res) => {
   } catch {
     res.status(503).json({ status: "error", database: "disconnected", timestamp: new Date().toISOString() });
   }
+});
+
+// Root route
+app.get("/", (req, res) => {
+  res.json({ name: "Velora API", version: "1.0.0", health: "/api/health" });
 });
 
 // 404 handler
