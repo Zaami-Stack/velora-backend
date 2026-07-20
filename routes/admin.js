@@ -16,7 +16,7 @@ router.get("/dashboard", auth, adminOnly, async (req, res) => {
     );
 
     const [recentOrders] = await pool.query(`
-      SELECT o.*, u.name AS customer_name, u.email AS customer_email
+      SELECT o.*, u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
       FROM orders o
       JOIN users u ON o.user_id = u.id
       ORDER BY o.created_at DESC
@@ -46,7 +46,7 @@ router.get("/orders", auth, adminOnly, adminOrderListRules, async (req, res) => 
   try {
     const { status } = req.query;
     let sql = `
-      SELECT o.*, u.name AS customer_name, u.email AS customer_email
+      SELECT o.*, u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
       FROM orders o
       JOIN users u ON o.user_id = u.id
     `;
