@@ -1,24 +1,23 @@
 const express = require("express");
-const { auth, adminOnly } = require("../middleware/auth");
 const { pool } = require("../models/db");
-const { updateOrderStatusRules, adminOrderListRules } = require("../middleware/validate");
 
 const router = express.Router();
 
 // GET /api/admin/dashboard
-router.get("/dashboard", auth, adminOnly, async (req, res) => {
+router.get("/dashboard", async (req, res) => {
   try {
     const [[{ totalOrders }]] = await pool.query("SELECT COUNT(*) AS totalOrders FROM orders");
     const [[{ totalRevenue }]] = await pool.query("SELECT COALESCE(SUM(total), 0) AS totalRevenue FROM orders");
-    const [[{ totalUsers }]] = await pool.query("SELECT COUNT(*) AS totalUsers FROM users");
     const [[{ pendingOrders }]] = await pool.query(
       "SELECT COUNT(*) AS pendingOrders FROM orders WHERE status = 'pending'"
     );
 
     const [recentOrders] = await pool.query(`
-      SELECT o.*, u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+      SELECT o.*,
+        COALESCE(u.name, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.firstName'), ' ', JSON_EXTRACT(o.shipping_address, '$.lastName'))) AS customer_name,
+        COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email'))) AS customer_email
       FROM orders o
-      JOIN users u ON o.user_id = u.id
+      LEFT JOIN users u ON o.user_id = u.id
       ORDER BY o.created_at DESC
       LIMIT 5
     `);
@@ -31,7 +30,6 @@ router.get("/dashboard", auth, adminOnly, async (req, res) => {
     res.json({
       totalOrders,
       totalRevenue: Number(totalRevenue),
-      totalUsers,
       pendingOrders,
       recentOrders,
     });
@@ -42,13 +40,15 @@ router.get("/dashboard", auth, adminOnly, async (req, res) => {
 });
 
 // GET /api/admin/orders
-router.get("/orders", auth, adminOnly, adminOrderListRules, async (req, res) => {
+router.get("/orders", async (req, res) => {
   try {
     const { status } = req.query;
     let sql = `
-      SELECT o.*, u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+      SELECT o.*,
+        COALESCE(u.name, CONCAT(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.firstName')), ' ', JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.lastName')))) AS customer_name,
+        COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email'))) AS customer_email
       FROM orders o
-      JOIN users u ON o.user_id = u.id
+      LEFT JOIN users u ON o.user_id = u.id
     `;
     const params = [];
 
@@ -74,7 +74,7 @@ router.get("/orders", auth, adminOnly, adminOrderListRules, async (req, res) => 
 });
 
 // PATCH /api/admin/orders/:id
-router.patch("/orders/:id", auth, adminOnly, updateOrderStatusRules, async (req, res) => {
+router.patch("/orders/:id", async (req, res) => {
   try {
     const { status } = req.body;
 
@@ -84,9 +84,11 @@ router.patch("/orders/:id", auth, adminOnly, updateOrderStatusRules, async (req,
     }
 
     const [rows] = await pool.query(`
-      SELECT o.*, u.name AS customer_name, u.email AS customer_email
+      SELECT o.*,
+        COALESCE(u.name, CONCAT(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.firstName')), ' ', JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.lastName')))) AS customer_name,
+        COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email'))) AS customer_email
       FROM orders o
-      JOIN users u ON o.user_id = u.id
+      LEFT JOIN users u ON o.user_id = u.id
       WHERE o.id = ?
     `, [req.params.id]);
 
@@ -101,27 +103,8 @@ router.patch("/orders/:id", auth, adminOnly, updateOrderStatusRules, async (req,
   }
 });
 
-// GET /api/admin/users
-router.get("/users", auth, adminOnly, async (req, res) => {
-  try {
-    const [users] = await pool.query(`
-      SELECT u.id, u.name, u.email, u.phone, u.is_admin, u.created_at,
-        COUNT(o.id) AS order_count,
-        COALESCE(SUM(o.total), 0) AS total_spent
-      FROM users u
-      LEFT JOIN orders o ON u.id = o.user_id
-      GROUP BY u.id
-      ORDER BY u.created_at DESC
-    `);
-    res.json(users);
-  } catch (err) {
-    console.error("Admin users list error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
 // GET /api/admin/products
-router.get("/products", auth, adminOnly, async (req, res) => {
+router.get("/products", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT p.* FROM products p ORDER BY p.id ASC");
     const [allColors] = await pool.query("SELECT product_id, color_hex, image FROM product_colors");
@@ -139,7 +122,7 @@ router.get("/products", auth, adminOnly, async (req, res) => {
 });
 
 // POST /api/admin/products
-router.post("/products", auth, adminOnly, async (req, res) => {
+router.post("/products", async (req, res) => {
   try {
     const { name, category, price, original_price, image, badge, rating, reviews, description, colors } = req.body;
 
@@ -177,7 +160,7 @@ router.post("/products", auth, adminOnly, async (req, res) => {
 });
 
 // PUT /api/admin/products/:id
-router.put("/products/:id", auth, adminOnly, async (req, res) => {
+router.put("/products/:id", async (req, res) => {
   try {
     const { name, category, price, original_price, image, badge, rating, reviews, description, colors } = req.body;
     const { id } = req.params;
@@ -215,7 +198,7 @@ router.put("/products/:id", auth, adminOnly, async (req, res) => {
 });
 
 // DELETE /api/admin/products/:id
-router.delete("/products/:id", auth, adminOnly, async (req, res) => {
+router.delete("/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const [existing] = await pool.query("SELECT id FROM products WHERE id = ?", [id]);
