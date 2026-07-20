@@ -232,4 +232,20 @@ router.put("/password", auth, async (req, res) => {
   }
 });
 
+// DELETE /api/auth/account — delete own account
+router.delete("/account", auth, async (req, res) => {
+  try {
+    const [orders] = await pool.query("SELECT id FROM orders WHERE user_id = ?", [req.user.id]);
+    for (const order of orders) {
+      await pool.query("DELETE FROM order_items WHERE order_id = ?", [order.id]);
+    }
+    await pool.query("DELETE FROM orders WHERE user_id = ?", [req.user.id]);
+    await pool.query("DELETE FROM users WHERE id = ?", [req.user.id]);
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("Delete account error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;
