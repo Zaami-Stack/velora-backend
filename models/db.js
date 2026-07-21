@@ -53,6 +53,10 @@ async function initDB() {
     // Migration: add image column to product_colors
     try { await conn.query("ALTER TABLE product_colors ADD COLUMN image TEXT NULL"); } catch (e) {}
 
+    // Migration: fix order_items FK to allow product deletion
+    try { await conn.query("ALTER TABLE order_items DROP FOREIGN KEY order_items_ibfk_2"); } catch (e) {}
+    try { await conn.query("ALTER TABLE order_items ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL"); } catch (e) {}
+
     await conn.query(`
       CREATE TABLE IF NOT EXISTS products (
         id INT PRIMARY KEY,
@@ -101,7 +105,7 @@ async function initDB() {
         price DECIMAL(10,2) NOT NULL,
         quantity INT NOT NULL,
         FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-        FOREIGN KEY (product_id) REFERENCES products(id)
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
       )
     `);
 
