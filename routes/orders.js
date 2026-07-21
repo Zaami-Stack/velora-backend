@@ -1,6 +1,7 @@
 const express = require("express");
 const { randomUUID: uuidv4 } = require("crypto");
 const { pool } = require("../models/db");
+const { auth, optionalAuth } = require("../middleware/auth");
 const { orderLimiter } = require("../middleware/rateLimiter");
 const { sendOrderConfirmation } = require("../services/email");
 
@@ -8,8 +9,8 @@ const router = express.Router();
 
 const VALID_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
-// POST /api/orders - create order (guest checkout, no auth required)
-router.post("/", orderLimiter, async (req, res) => {
+// POST /api/orders - create order (guest checkout, optional auth for logged-in users)
+router.post("/", orderLimiter, optionalAuth, async (req, res) => {
   const conn = await pool.getConnection();
   try {
     const { items, shippingAddress, couponCode } = req.body;
@@ -100,8 +101,8 @@ router.post("/", orderLimiter, async (req, res) => {
     const orderId = "ORD-" + uuidv4().slice(0, 8).toUpperCase();
 
     await conn.query(
-      "INSERT INTO orders (id, user_id, subtotal, shipping, total, shipping_address, status, coupon_id, discount) VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?)",
-      [orderId, subtotal, shipping, total, JSON.stringify(shippingAddress || {}), "pending", couponId, discount]
+      "INSERT INTO orders (id, user_id, subtotal, shipping, total, shipping_address, status, coupon_id, discount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [orderId, req.user?.id || null, subtotal, shipping, total, JSON.stringify(shippingAddress || {}), "pending", couponId, discount]
     );
 
     for (const item of orderItems) {
@@ -166,7 +167,6 @@ router.get("/:id/track", async (req, res) => {
 });
 
 // GET /api/orders/:id - get order details (auth required, own orders only)
-const { auth } = require("../middleware/auth");
 router.get("/:id", auth, async (req, res) => {
   try {
     const [rows] = await pool.query(
