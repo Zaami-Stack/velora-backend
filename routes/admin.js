@@ -209,7 +209,9 @@ router.delete("/products/:id", async (req, res) => {
     if (existing.length === 0) { conn.release(); return res.status(404).json({ error: "Product not found" }); }
 
     await conn.beginTransaction();
+    await conn.query("SET FOREIGN_KEY_CHECKS = 0");
     await conn.query("UPDATE order_items SET product_id = NULL WHERE product_id = ?", [id]);
+    await conn.query("SET FOREIGN_KEY_CHECKS = 1");
     await conn.query("DELETE FROM product_colors WHERE product_id = ?", [id]);
     await conn.query("DELETE FROM products WHERE id = ?", [id]);
     await conn.commit();
