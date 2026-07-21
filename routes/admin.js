@@ -183,7 +183,7 @@ router.get("/products", async (req, res) => {
 // POST /api/admin/products
 router.post("/products", async (req, res) => {
   try {
-    const { name, category, price, original_price, image, badge, rating, reviews, description, colors } = req.body;
+    const { name, category, price, original_price, delivery_price, image, badge, rating, reviews, description, colors } = req.body;
 
     if (!name || !category || !price || !image) {
       return res.status(400).json({ error: "Name, category, price, and image are required" });
@@ -193,8 +193,8 @@ router.post("/products", async (req, res) => {
     const newId = maxId + 1;
 
     await pool.query(
-      "INSERT INTO products (id, name, category, price, original_price, image, badge, rating, reviews, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [newId, name, category, price, original_price || null, image, badge || null, rating || 0, reviews || 0, description || null]
+      "INSERT INTO products (id, name, category, price, original_price, delivery_price, image, badge, rating, reviews, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [newId, name, category, price, original_price || null, delivery_price || 0, image, badge || null, rating || 0, reviews || 0, description || null]
     );
 
     if (colors && colors.length > 0) {
@@ -221,15 +221,15 @@ router.post("/products", async (req, res) => {
 // PUT /api/admin/products/:id
 router.put("/products/:id", async (req, res) => {
   try {
-    const { name, category, price, original_price, image, badge, rating, reviews, description, colors } = req.body;
+    const { name, category, price, original_price, delivery_price, image, badge, rating, reviews, description, colors } = req.body;
     const { id } = req.params;
 
     const [existing] = await pool.query("SELECT id FROM products WHERE id = ?", [id]);
     if (existing.length === 0) return res.status(404).json({ error: "Product not found" });
 
     await pool.query(
-      "UPDATE products SET name = ?, category = ?, price = ?, original_price = ?, image = ?, badge = ?, rating = ?, reviews = ?, description = ? WHERE id = ?",
-      [name, category, price, original_price || null, image, badge || null, rating || 0, reviews || 0, description || null, id]
+      "UPDATE products SET name = ?, category = ?, price = ?, original_price = ?, delivery_price = ?, image = ?, badge = ?, rating = ?, reviews = ?, description = ? WHERE id = ?",
+      [name, category, price, original_price || null, delivery_price || 0, image, badge || null, rating || 0, reviews || 0, description || null, id]
     );
 
     if (colors && Array.isArray(colors)) {
@@ -279,6 +279,71 @@ router.delete("/products/:id", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   } finally {
     conn.release();
+  }
+});
+
+// ─── Banners CRUD ───────────────────────────────────────────────
+
+// GET /api/admin/banners
+router.get("/banners", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM banners ORDER BY sort_order ASC, id ASC");
+    res.json(rows);
+  } catch (err) {
+    console.error("Admin banners list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST /api/admin/banners
+router.post("/banners", async (req, res) => {
+  try {
+    const { title, subtitle, badge, button_text, button_link, image, sort_order, is_active } = req.body;
+    if (!title || !image) {
+      return res.status(400).json({ error: "Title and image are required" });
+    }
+    const [result] = await pool.query(
+      "INSERT INTO banners (title, subtitle, badge, button_text, button_link, image, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [title, subtitle || null, badge || null, button_text || null, button_link || "#products", image, sort_order || 0, is_active !== undefined ? (is_active ? 1 : 0) : 1]
+    );
+    const [rows] = await pool.query("SELECT * FROM banners WHERE id = ?", [result.insertId]);
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error("Admin banner create error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// PUT /api/admin/banners/:id
+router.put("/banners/:id", async (req, res) => {
+  try {
+    const { title, subtitle, badge, button_text, button_link, image, sort_order, is_active } = req.body;
+    const { id } = req.params;
+    const [existing] = await pool.query("SELECT id FROM banners WHERE id = ?", [id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Banner not found" });
+
+    await pool.query(
+      "UPDATE banners SET title = ?, subtitle = ?, badge = ?, button_text = ?, button_link = ?, image = ?, sort_order = ?, is_active = ? WHERE id = ?",
+      [title, subtitle || null, badge || null, button_text || null, button_link || "#products", image, sort_order || 0, is_active !== undefined ? (is_active ? 1 : 0) : 1, id]
+    );
+    const [rows] = await pool.query("SELECT * FROM banners WHERE id = ?", [id]);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Admin banner update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// DELETE /api/admin/banners/:id
+router.delete("/banners/:id", async (req, res) => {
+  try {
+    const [existing] = await pool.query("SELECT id FROM banners WHERE id = ?", [req.params.id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Banner not found" });
+    await pool.query("DELETE FROM banners WHERE id = ?", [req.params.id]);
+    res.json({ message: "Banner deleted" });
+  } catch (err) {
+    console.error("Admin banner delete error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

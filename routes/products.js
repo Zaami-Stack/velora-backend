@@ -84,6 +84,19 @@ router.get("/categories", async (req, res) => {
   }
 });
 
+// GET /api/products/banners - public, for homepage carousel
+router.get("/banners", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, title, subtitle, badge, button_text AS buttonText, button_link AS buttonLink, image FROM banners WHERE is_active = 1 ORDER BY sort_order ASC, id ASC"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Banners list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // GET /api/products/:id
 router.get("/:id", productIdRules, async (req, res) => {
   try {

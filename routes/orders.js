@@ -34,10 +34,13 @@ router.post("/", orderLimiter, async (req, res) => {
 
     const orderItems = [];
     let droppedCount = 0;
+    let totalDelivery = 0;
     for (const item of items) {
       const [rows] = await conn.query("SELECT * FROM products WHERE id = ?", [item.productId]);
       if (rows.length === 0) { droppedCount++; continue; }
       const product = rows[0];
+      const deliveryPrice = Number(product.delivery_price) || 0;
+      totalDelivery += deliveryPrice * item.quantity;
       orderItems.push({
         productId: product.id,
         name: product.name,
@@ -60,7 +63,7 @@ router.post("/", orderLimiter, async (req, res) => {
     }
 
     const subtotal = Number((orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0)).toFixed(2));
-    const shipping = subtotal >= 50 ? 0 : 9.99;
+    const shipping = Number(totalDelivery.toFixed(2));
     const total = Number((subtotal + shipping).toFixed(2));
     const orderId = "ORD-" + uuidv4().slice(0, 8).toUpperCase();
 

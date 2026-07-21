@@ -58,6 +58,25 @@ async function initDB() {
     try { await conn.query("ALTER TABLE order_items DROP FOREIGN KEY order_items_ibfk_2"); } catch (e) {}
     try { await conn.query("ALTER TABLE order_items ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL"); } catch (e) {}
 
+    // Migration: add delivery_price to products
+    try { await conn.query("ALTER TABLE products ADD COLUMN delivery_price DECIMAL(10,2) NULL DEFAULT 0"); } catch (e) {}
+
+    // Banners table for homepage carousel
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS banners (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        subtitle TEXT NULL,
+        badge VARCHAR(100) NULL,
+        button_text VARCHAR(100) NULL,
+        button_link VARCHAR(500) NULL,
+        image TEXT NOT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await conn.query(`
       CREATE TABLE IF NOT EXISTS products (
         id INT PRIMARY KEY,
