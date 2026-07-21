@@ -1,7 +1,10 @@
 const express = require("express");
 const { pool } = require("../models/db");
+const { auth, adminOnly } = require("../middleware/auth");
 
 const router = express.Router();
+
+router.use(auth, adminOnly);
 
 // GET /api/admin/dashboard
 router.get("/dashboard", async (req, res) => {
@@ -14,7 +17,7 @@ router.get("/dashboard", async (req, res) => {
 
     const [recentOrders] = await pool.query(`
       SELECT o.*,
-        COALESCE(u.name, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.firstName'), ' ', JSON_EXTRACT(o.shipping_address, '$.lastName'))) AS customer_name,
+        COALESCE(u.name, CONCAT(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.firstName')), ' ', JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.lastName')))) AS customer_name,
         COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email'))) AS customer_email
       FROM orders o
       LEFT JOIN users u ON o.user_id = u.id
