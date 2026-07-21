@@ -106,6 +106,31 @@ router.patch("/orders/:id", async (req, res) => {
   }
 });
 
+// GET /api/admin/users
+router.get("/users", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        COALESCE(u.id, LOWER(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')), '@', ''))) AS id,
+        COALESCE(u.name, CONCAT(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.firstName')), ' ', JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.lastName')))) AS name,
+        COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email'))) AS email,
+        u.phone AS phone,
+        COALESCE(u.created_at, MIN(o.created_at)) AS created_at,
+        COUNT(DISTINCT o.id) AS order_count,
+        COALESCE(SUM(o.total), 0) AS total_spent,
+        COALESCE(u.is_admin, 0) AS is_admin
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      GROUP BY id, name, email, phone, created_at, is_admin
+      ORDER BY order_count DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("Admin users list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // GET /api/admin/products
 router.get("/products", async (req, res) => {
   try {
