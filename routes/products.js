@@ -97,6 +97,19 @@ router.get("/banners", async (req, res) => {
   }
 });
 
+// GET /api/products/shop-categories - public, for homepage "Shop by Category"
+router.get("/shop-categories", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, name, slug, image FROM categories WHERE is_active = 1 ORDER BY sort_order ASC, id ASC"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Shop categories error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // GET /api/products/:id
 router.get("/:id", productIdRules, async (req, res) => {
   try {

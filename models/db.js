@@ -77,6 +77,19 @@ async function initDB() {
       )
     `);
 
+    // Categories table for homepage "Shop by Category" section
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        slug VARCHAR(100) NOT NULL UNIQUE,
+        image TEXT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await conn.query(`
       CREATE TABLE IF NOT EXISTS products (
         id INT PRIMARY KEY,

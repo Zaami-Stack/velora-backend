@@ -347,4 +347,80 @@ router.delete("/banners/:id", async (req, res) => {
   }
 });
 
+// ─── Categories CRUD ───────────────────────────────────────────
+
+// GET /api/admin/categories
+router.get("/categories", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM categories ORDER BY sort_order ASC, id ASC");
+    res.json(rows);
+  } catch (err) {
+    console.error("Admin categories list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST /api/admin/categories
+router.post("/categories", async (req, res) => {
+  try {
+    const { name, slug, image, sort_order, is_active } = req.body;
+    if (!name || !slug) {
+      return res.status(400).json({ error: "Name and slug are required" });
+    }
+    const [existing] = await pool.query("SELECT id FROM categories WHERE slug = ?", [slug]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: "A category with this slug already exists" });
+    }
+    const [result] = await pool.query(
+      "INSERT INTO categories (name, slug, image, sort_order, is_active) VALUES (?, ?, ?, ?, ?)",
+      [name, slug, image || null, sort_order || 0, is_active !== undefined ? (is_active ? 1 : 0) : 1]
+    );
+    const [rows] = await pool.query("SELECT * FROM categories WHERE id = ?", [result.insertId]);
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error("Admin category create error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// PUT /api/admin/categories/:id
+router.put("/categories/:id", async (req, res) => {
+  try {
+    const { name, slug, image, sort_order, is_active } = req.body;
+    const { id } = req.params;
+    const [existing] = await pool.query("SELECT id FROM categories WHERE id = ?", [id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Category not found" });
+
+    if (slug) {
+      const [dup] = await pool.query("SELECT id FROM categories WHERE slug = ? AND id != ?", [slug, id]);
+      if (dup.length > 0) {
+        return res.status(400).json({ error: "A category with this slug already exists" });
+      }
+    }
+
+    await pool.query(
+      "UPDATE categories SET name = ?, slug = ?, image = ?, sort_order = ?, is_active = ? WHERE id = ?",
+      [name, slug, image || null, sort_order || 0, is_active !== undefined ? (is_active ? 1 : 0) : 1, id]
+    );
+    const [rows] = await pool.query("SELECT * FROM categories WHERE id = ?", [id]);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Admin category update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// DELETE /api/admin/categories/:id
+router.delete("/categories/:id", async (req, res) => {
+  try {
+    const [existing] = await pool.query("SELECT id FROM categories WHERE id = ?", [req.params.id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Category not found" });
+    await pool.query("DELETE FROM categories WHERE id = ?", [req.params.id]);
+    res.json({ message: "Category deleted" });
+  } catch (err) {
+    console.error("Admin category delete error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;
