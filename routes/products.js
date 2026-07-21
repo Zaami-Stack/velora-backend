@@ -127,8 +127,10 @@ router.get("/:id/reviews", async (req, res) => {
 // POST /api/products/:id/reviews - submit a review
 router.post("/:id/reviews", async (req, res) => {
   try {
-    const { customerName, customerEmail, rating, title, comment, orderId } = req.body;
-    if (!customerName || !rating) return res.status(400).json({ error: "Name and rating are required" });
+    const { customerName, name, customerEmail, email, rating, title, comment, orderId } = req.body;
+    const reviewerName = customerName || name;
+    const reviewerEmail = customerEmail || email;
+    if (!reviewerName || !rating) return res.status(400).json({ error: "Name and rating are required" });
     if (rating < 1 || rating > 5) return res.status(400).json({ error: "Rating must be 1-5" });
 
     const [product] = await pool.query("SELECT id FROM products WHERE id = ?", [req.params.id]);
@@ -136,7 +138,7 @@ router.post("/:id/reviews", async (req, res) => {
 
     const [result] = await pool.query(
       "INSERT INTO reviews (product_id, order_id, customer_name, customer_email, rating, title, comment, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
-      [req.params.id, orderId || null, customerName, customerEmail || null, rating, title || null, comment || null]
+      [req.params.id, orderId || null, reviewerName, reviewerEmail || null, rating, title || null, comment || null]
     );
 
     // Update product rating
