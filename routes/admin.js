@@ -118,22 +118,29 @@ router.get("/users", async (req, res) => {
     const [rows] = await pool.query(`
       SELECT
         LOWER(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')), '@', '')) AS id,
-        CONCAT(
+        TRIM(CONCAT(
           IFNULL(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.firstName')), ''),
           ' ',
           IFNULL(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.lastName')), '')
-        ) AS name,
+        )) AS name,
         JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')) AS email,
-        JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.phone')) AS phone,
+        IFNULL(JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.phone')), '') AS phone,
         MIN(o.created_at) AS created_at,
         COUNT(o.id) AS order_count,
         COALESCE(SUM(o.total), 0) AS total_spent
       FROM orders o
       WHERE JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')) IS NOT NULL
+        AND JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')) != 'null'
+        AND JSON_UNQUOTE(JSON_EXTRACT(o.shipping_address, '$.email')) != ''
       GROUP BY id, name, email, phone
       ORDER BY order_count DESC
     `);
-    res.json(rows);
+    res.json(rows.map((r) => ({
+      ...r,
+      created_at: r.created_at || new Date().toISOString(),
+      total_spent: Number(r.total_spent) || 0,
+      order_count: Number(r.order_count) || 0,
+    })));
   } catch (err) {
     console.error("Admin users list error:", err);
     res.status(500).json({ error: "Server error" });
