@@ -54,6 +54,7 @@ async function initDB() {
     try { await conn.query("ALTER TABLE product_colors ADD COLUMN image TEXT NULL"); } catch (e) {}
 
     // Migration: fix order_items FK to allow product deletion
+    try { await conn.query("ALTER TABLE order_items MODIFY COLUMN product_id INT NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE order_items DROP FOREIGN KEY order_items_ibfk_2"); } catch (e) {}
     try { await conn.query("ALTER TABLE order_items ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL"); } catch (e) {}
 

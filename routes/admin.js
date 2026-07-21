@@ -202,18 +202,25 @@ router.put("/products/:id", async (req, res) => {
 
 // DELETE /api/admin/products/:id
 router.delete("/products/:id", async (req, res) => {
+  const conn = await pool.getConnection();
   try {
     const { id } = req.params;
-    const [existing] = await pool.query("SELECT id FROM products WHERE id = ?", [id]);
-    if (existing.length === 0) return res.status(404).json({ error: "Product not found" });
+    const [existing] = await conn.query("SELECT id FROM products WHERE id = ?", [id]);
+    if (existing.length === 0) { conn.release(); return res.status(404).json({ error: "Product not found" }); }
 
-    await pool.query("DELETE FROM product_colors WHERE product_id = ?", [id]);
-    await pool.query("DELETE FROM products WHERE id = ?", [id]);
+    await conn.beginTransaction();
+    await conn.query("UPDATE order_items SET product_id = NULL WHERE product_id = ?", [id]);
+    await conn.query("DELETE FROM product_colors WHERE product_id = ?", [id]);
+    await conn.query("DELETE FROM products WHERE id = ?", [id]);
+    await conn.commit();
 
     res.json({ message: "Product deleted" });
   } catch (err) {
+    await conn.rollback();
     console.error("Admin product delete error:", err);
     res.status(500).json({ error: "Server error" });
+  } finally {
+    conn.release();
   }
 });
 
