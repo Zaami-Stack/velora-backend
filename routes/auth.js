@@ -135,7 +135,7 @@ router.post("/forgot-password", authLimiter, async (req, res) => {
 
     const [rows] = await pool.query("SELECT security_question FROM users WHERE email = ?", [email]);
     if (rows.length === 0 || !rows[0].security_question) {
-      return res.status(404).json({ error: "No account found with this email" });
+      return res.json({ message: "If an account exists with this email, you will see your security question." });
     }
 
     res.json({ securityQuestion: rows[0].security_question });
@@ -234,17 +234,23 @@ router.put("/password", auth, async (req, res) => {
 
 // DELETE /api/auth/account — delete own account
 router.delete("/account", auth, async (req, res) => {
+  const conn = await pool.getConnection();
   try {
-    const [orders] = await pool.query("SELECT id FROM orders WHERE user_id = ?", [req.user.id]);
+    await conn.beginTransaction();
+    const [orders] = await conn.query("SELECT id FROM orders WHERE user_id = ?", [req.user.id]);
     for (const order of orders) {
-      await pool.query("DELETE FROM order_items WHERE order_id = ?", [order.id]);
+      await conn.query("DELETE FROM order_items WHERE order_id = ?", [order.id]);
     }
-    await pool.query("DELETE FROM orders WHERE user_id = ?", [req.user.id]);
-    await pool.query("DELETE FROM users WHERE id = ?", [req.user.id]);
+    await conn.query("DELETE FROM orders WHERE user_id = ?", [req.user.id]);
+    await conn.query("DELETE FROM users WHERE id = ?", [req.user.id]);
+    await conn.commit();
     res.json({ message: "Account deleted successfully" });
   } catch (err) {
+    await conn.rollback();
     console.error("Delete account error:", err);
     res.status(500).json({ error: "Server error" });
+  } finally {
+    conn.release();
   }
 });
 

@@ -45,7 +45,7 @@ async function initDB() {
     try { await conn.query("ALTER TABLE users ADD COLUMN secret_hash VARCHAR(255) NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE users ADD COLUMN security_question VARCHAR(255) NULL"); } catch (e) {}
     try { await conn.query("ALTER TABLE users ADD COLUMN security_answer_hash VARCHAR(255) NULL"); } catch (e) {}
-    try { await conn.query("ALTER TABLE orders MODIFY COLUMN user_id VARCHAR(36) NOT NULL"); } catch (e) {}
+    try { await conn.query("ALTER TABLE orders MODIFY COLUMN user_id VARCHAR(36) NULL"); } catch (e) {}
 
     // Drop old password_resets table if it exists
     try { await conn.query("DROP TABLE IF EXISTS password_resets"); } catch (e) {}
@@ -85,14 +85,14 @@ async function initDB() {
     await conn.query(`
       CREATE TABLE IF NOT EXISTS orders (
         id VARCHAR(50) PRIMARY KEY,
-        user_id VARCHAR(36) NOT NULL,
+        user_id VARCHAR(36) NULL,
         subtotal DECIMAL(10,2) NOT NULL,
         shipping DECIMAL(10,2) NOT NULL,
         total DECIMAL(10,2) NOT NULL,
         shipping_address JSON NULL,
         status VARCHAR(30) NOT NULL DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
 

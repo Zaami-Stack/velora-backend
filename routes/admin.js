@@ -14,6 +14,7 @@ router.get("/dashboard", async (req, res) => {
     const [[{ pendingOrders }]] = await pool.query(
       "SELECT COUNT(*) AS pendingOrders FROM orders WHERE status = 'pending'"
     );
+    const [[{ totalUsers }]] = await pool.query("SELECT COUNT(DISTINCT JSON_UNQUOTE(JSON_EXTRACT(shipping_address, '$.email'))) AS totalUsers FROM orders WHERE JSON_UNQUOTE(JSON_EXTRACT(shipping_address, '$.email')) IS NOT NULL");
 
     const [recentOrders] = await pool.query(`
       SELECT o.*,
@@ -34,6 +35,7 @@ router.get("/dashboard", async (req, res) => {
       totalOrders,
       totalRevenue: Number(totalRevenue),
       pendingOrders,
+      totalUsers,
       recentOrders,
     });
   } catch (err) {
@@ -80,6 +82,10 @@ router.get("/orders", async (req, res) => {
 router.patch("/orders/:id", async (req, res) => {
   try {
     const { status } = req.body;
+    const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
+    }
 
     const [result] = await pool.query("UPDATE orders SET status = ? WHERE id = ?", [status, req.params.id]);
     if (result.affectedRows === 0) {
