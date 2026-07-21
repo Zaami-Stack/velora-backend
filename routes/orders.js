@@ -169,7 +169,10 @@ router.get("/:id/track", async (req, res) => {
 const { auth } = require("../middleware/auth");
 router.get("/:id", auth, async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM orders WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
+    const [rows] = await pool.query(
+      "SELECT * FROM orders WHERE id = ? AND (user_id = ? OR JSON_UNQUOTE(JSON_EXTRACT(shipping_address, '$.email')) = ?)",
+      [req.params.id, req.user.id, req.user.email]
+    );
     if (rows.length === 0) return res.status(404).json({ error: "Order not found" });
     const [items] = await pool.query("SELECT * FROM order_items WHERE order_id = ?", [req.params.id]);
     res.json({ ...rows[0], items });
@@ -182,7 +185,10 @@ router.get("/:id", auth, async (req, res) => {
 // GET /api/orders - list user orders (auth required)
 router.get("/", auth, async (req, res) => {
   try {
-    const [orders] = await pool.query("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC", [req.user.id]);
+    const [orders] = await pool.query(
+      "SELECT * FROM orders WHERE user_id = ? OR JSON_UNQUOTE(JSON_EXTRACT(shipping_address, '$.email')) = ? ORDER BY created_at DESC",
+      [req.user.id, req.user.email]
+    );
     for (const order of orders) {
       const [items] = await pool.query("SELECT * FROM order_items WHERE order_id = ?", [order.id]);
       order.items = items;
@@ -197,7 +203,10 @@ router.get("/", auth, async (req, res) => {
 // PATCH /api/orders/:id/cancel
 router.patch("/:id/cancel", auth, async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM orders WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
+    const [rows] = await pool.query(
+      "SELECT * FROM orders WHERE id = ? AND (user_id = ? OR JSON_UNQUOTE(JSON_EXTRACT(shipping_address, '$.email')) = ?)",
+      [req.params.id, req.user.id, req.user.email]
+    );
     if (rows.length === 0) return res.status(404).json({ error: "Order not found" });
     if (rows[0].status !== "pending") return res.status(400).json({ error: "Only pending orders can be cancelled" });
 
