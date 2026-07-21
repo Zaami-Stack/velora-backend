@@ -61,6 +61,17 @@ async function initDB() {
     // Migration: add delivery_price to products
     try { await conn.query("ALTER TABLE products ADD COLUMN delivery_price DECIMAL(10,2) NULL DEFAULT 0"); } catch (e) {}
 
+    // Migration: add stock column to products
+    try { await conn.query("ALTER TABLE products ADD COLUMN stock INT NULL DEFAULT NULL"); } catch (e) {}
+
+    // Migration: add coupon_id and discount to orders
+    try { await conn.query("ALTER TABLE orders ADD COLUMN coupon_id INT NULL"); } catch (e) {}
+    try { await conn.query("ALTER TABLE orders ADD COLUMN discount DECIMAL(10,2) NULL DEFAULT 0"); } catch (e) {}
+
+    // Migration: add size and color to order_items
+    try { await conn.query("ALTER TABLE order_items ADD COLUMN size VARCHAR(20) NULL"); } catch (e) {}
+    try { await conn.query("ALTER TABLE order_items ADD COLUMN color VARCHAR(20) NULL"); } catch (e) {}
+
     // Banners table for homepage carousel
     await conn.query(`
       CREATE TABLE IF NOT EXISTS banners (
@@ -89,6 +100,78 @@ async function initDB() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Coupons table for discount codes
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS coupons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(50) NOT NULL UNIQUE,
+        discount_type ENUM('percentage', 'fixed') NOT NULL DEFAULT 'percentage',
+        discount_value DECIMAL(10,2) NOT NULL,
+        min_order DECIMAL(10,2) NULL DEFAULT 0,
+        max_uses INT NULL DEFAULT NULL,
+        times_used INT NOT NULL DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        expires_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Reviews table for product reviews
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS reviews (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id INT NOT NULL,
+        order_id VARCHAR(50) NULL,
+        customer_name VARCHAR(255) NOT NULL,
+        customer_email VARCHAR(255) NULL,
+        rating TINYINT NOT NULL,
+        title VARCHAR(255) NULL,
+        comment TEXT NULL,
+        is_approved TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Pages table for About/Contact content
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS pages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        slug VARCHAR(50) NOT NULL UNIQUE,
+        content LONGTEXT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Seed default pages
+    const [[aboutExists]] = await conn.query("SELECT id FROM pages WHERE slug = 'about'");
+    if (!aboutExists) {
+      await conn.query("INSERT INTO pages (slug, content) VALUES (?, ?)", [
+        "about",
+        JSON.stringify({
+          title: "About Velora",
+          subtitle: "Luxury Fashion, Redefined",
+          story: "Velora was founded with a singular vision: to bring timeless elegance to the modern wardrobe. Every piece in our collection is curated for those who appreciate understated luxury and effortless sophistication.",
+          mission: "We believe fashion should be both beautiful and responsible. Our commitment to quality means each garment is crafted to last, using premium materials and meticulous attention to detail.",
+          values: ["Timeless Design", "Premium Quality", "Sustainable Practices", "Customer First"]
+        })
+      ]);
+    }
+    const [[contactExists]] = await conn.query("SELECT id FROM pages WHERE slug = 'contact'");
+    if (!contactExists) {
+      await conn.query("INSERT INTO pages (slug, content) VALUES (?, ?)", [
+        "contact",
+        JSON.stringify({
+          title: "Contact Us",
+          email: "support@velora.ma",
+          phone: "+212 600 000 000",
+          address: "Casablanca, Morocco",
+          hours: "Mon-Sat: 9:00 AM - 7:00 PM",
+          social: { instagram: "#", facebook: "#", tiktok: "#" }
+        })
+      ]);
+    }
 
     await conn.query(`
       CREATE TABLE IF NOT EXISTS products (

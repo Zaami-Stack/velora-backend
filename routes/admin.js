@@ -1,6 +1,7 @@
 const express = require("express");
 const { pool } = require("../models/db");
 const { auth, adminOnly } = require("../middleware/auth");
+const { sendStatusUpdate } = require("../services/email");
 
 const router = express.Router();
 
@@ -108,6 +109,9 @@ router.patch("/orders/:id", async (req, res) => {
     const [items] = await pool.query("SELECT * FROM order_items WHERE order_id = ?", [order.id]);
     order.items = items;
 
+    // Send status update email (non-blocking)
+    sendStatusUpdate(order, order.status, status).catch(() => {});
+
     res.json(order);
   } catch (err) {
     console.error("Admin order update error:", err);
@@ -183,7 +187,7 @@ router.get("/products", async (req, res) => {
 // POST /api/admin/products
 router.post("/products", async (req, res) => {
   try {
-    const { name, category, price, original_price, delivery_price, image, badge, rating, reviews, description, colors } = req.body;
+    const { name, category, price, original_price, delivery_price, image, badge, rating, reviews, description, colors, stock } = req.body;
 
     if (!name || !category || !price || !image) {
       return res.status(400).json({ error: "Name, category, price, and image are required" });
@@ -193,8 +197,8 @@ router.post("/products", async (req, res) => {
     const newId = maxId + 1;
 
     await pool.query(
-      "INSERT INTO products (id, name, category, price, original_price, delivery_price, image, badge, rating, reviews, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [newId, name, category, price, original_price || null, delivery_price || 0, image, badge || null, rating || 0, reviews || 0, description || null]
+      "INSERT INTO products (id, name, category, price, original_price, delivery_price, image, badge, rating, reviews, description, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [newId, name, category, price, original_price || null, delivery_price || 0, image, badge || null, rating || 0, reviews || 0, description || null, stock !== undefined && stock !== null ? stock : null]
     );
 
     if (colors && colors.length > 0) {
@@ -221,15 +225,15 @@ router.post("/products", async (req, res) => {
 // PUT /api/admin/products/:id
 router.put("/products/:id", async (req, res) => {
   try {
-    const { name, category, price, original_price, delivery_price, image, badge, rating, reviews, description, colors } = req.body;
+    const { name, category, price, original_price, delivery_price, image, badge, rating, reviews, description, colors, stock } = req.body;
     const { id } = req.params;
 
     const [existing] = await pool.query("SELECT id FROM products WHERE id = ?", [id]);
     if (existing.length === 0) return res.status(404).json({ error: "Product not found" });
 
     await pool.query(
-      "UPDATE products SET name = ?, category = ?, price = ?, original_price = ?, delivery_price = ?, image = ?, badge = ?, rating = ?, reviews = ?, description = ? WHERE id = ?",
-      [name, category, price, original_price || null, delivery_price || 0, image, badge || null, rating || 0, reviews || 0, description || null, id]
+      "UPDATE products SET name = ?, category = ?, price = ?, original_price = ?, delivery_price = ?, image = ?, badge = ?, rating = ?, reviews = ?, description = ?, stock = ? WHERE id = ?",
+      [name, category, price, original_price || null, delivery_price || 0, image, badge || null, rating || 0, reviews || 0, description || null, stock !== undefined && stock !== null ? stock : null, id]
     );
 
     if (colors && Array.isArray(colors)) {
@@ -419,6 +423,183 @@ router.delete("/categories/:id", async (req, res) => {
     res.json({ message: "Category deleted" });
   } catch (err) {
     console.error("Admin category delete error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ─── Coupons CRUD ──────────────────────────────────────────────
+
+router.get("/coupons", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM coupons ORDER BY id DESC");
+    res.json(rows);
+  } catch (err) {
+    console.error("Admin coupons list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/coupons", async (req, res) => {
+  try {
+    const { code, discount_type, discount_value, min_order, max_uses, expires_at, is_active } = req.body;
+    if (!code || !discount_value) return res.status(400).json({ error: "Code and discount value are required" });
+    const [dup] = await pool.query("SELECT id FROM coupons WHERE code = ?", [code.toUpperCase()]);
+    if (dup.length > 0) return res.status(400).json({ error: "Coupon code already exists" });
+    const [result] = await pool.query(
+      "INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, expires_at, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [code.toUpperCase(), discount_type || "percentage", discount_value, min_order || 0, max_uses || null, expires_at || null, is_active !== undefined ? (is_active ? 1 : 0) : 1]
+    );
+    const [rows] = await pool.query("SELECT * FROM coupons WHERE id = ?", [result.insertId]);
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error("Admin coupon create error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/coupons/:id", async (req, res) => {
+  try {
+    const { code, discount_type, discount_value, min_order, max_uses, expires_at, is_active } = req.body;
+    const { id } = req.params;
+    const [existing] = await pool.query("SELECT id FROM coupons WHERE id = ?", [id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Coupon not found" });
+    if (code) {
+      const [dup] = await pool.query("SELECT id FROM coupons WHERE code = ? AND id != ?", [code.toUpperCase(), id]);
+      if (dup.length > 0) return res.status(400).json({ error: "Coupon code already exists" });
+    }
+    await pool.query(
+      "UPDATE coupons SET code = ?, discount_type = ?, discount_value = ?, min_order = ?, max_uses = ?, expires_at = ?, is_active = ? WHERE id = ?",
+      [code.toUpperCase(), discount_type, discount_value, min_order || 0, max_uses || null, expires_at || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, id]
+    );
+    const [rows] = await pool.query("SELECT * FROM coupons WHERE id = ?", [id]);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Admin coupon update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/coupons/:id", async (req, res) => {
+  try {
+    const [existing] = await pool.query("SELECT id FROM coupons WHERE id = ?", [req.params.id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Coupon not found" });
+    await pool.query("DELETE FROM coupons WHERE id = ?", [req.params.id]);
+    res.json({ message: "Coupon deleted" });
+  } catch (err) {
+    console.error("Admin coupon delete error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ─── Reviews moderation ────────────────────────────────────────
+
+router.get("/reviews", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT r.*, p.name AS product_name
+      FROM reviews r
+      LEFT JOIN products p ON r.product_id = p.id
+      ORDER BY r.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error("Admin reviews list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.patch("/reviews/:id/approve", async (req, res) => {
+  try {
+    const [result] = await pool.query("UPDATE reviews SET is_approved = 1 WHERE id = ?", [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Review not found" });
+    res.json({ message: "Review approved" });
+  } catch (err) {
+    console.error("Admin review approve error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.patch("/reviews/:id/reject", async (req, res) => {
+  try {
+    const [result] = await pool.query("UPDATE reviews SET is_approved = 0 WHERE id = ?", [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Review not found" });
+    res.json({ message: "Review rejected" });
+  } catch (err) {
+    console.error("Admin review reject error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/reviews/:id", async (req, res) => {
+  try {
+    const [existing] = await pool.query("SELECT id FROM reviews WHERE id = ?", [req.params.id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Review not found" });
+    await pool.query("DELETE FROM reviews WHERE id = ?", [req.params.id]);
+    res.json({ message: "Review deleted" });
+  } catch (err) {
+    console.error("Admin review delete error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ─── Stock management ──────────────────────────────────────────
+
+router.get("/stock", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT id, name, stock FROM products ORDER BY id ASC");
+    res.json(rows);
+  } catch (err) {
+    console.error("Admin stock list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/stock/:id", async (req, res) => {
+  try {
+    const { stock } = req.body;
+    const [existing] = await pool.query("SELECT id FROM products WHERE id = ?", [req.params.id]);
+    if (existing.length === 0) return res.status(404).json({ error: "Product not found" });
+    await pool.query("UPDATE products SET stock = ? WHERE id = ?", [stock, req.params.id]);
+    res.json({ message: "Stock updated", stock });
+  } catch (err) {
+    console.error("Admin stock update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ─── Pages (About/Contact) ─────────────────────────────────────
+
+router.get("/pages", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM pages ORDER BY id ASC");
+    const pages = rows.map((p) => {
+      let content = {};
+      try { content = JSON.parse(p.content || "{}"); } catch {}
+      return { id: p.id, slug: p.slug, content };
+    });
+    res.json(pages);
+  } catch (err) {
+    console.error("Admin pages list error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/pages/:slug", async (req, res) => {
+  try {
+    const { content } = req.body;
+    const { slug } = req.params;
+    const contentStr = typeof content === "string" ? content : JSON.stringify(content || {});
+    const [existing] = await pool.query("SELECT id FROM pages WHERE slug = ?", [slug]);
+    if (existing.length === 0) {
+      await pool.query("INSERT INTO pages (slug, content) VALUES (?, ?)", [slug, contentStr]);
+      const [rows] = await pool.query("SELECT * FROM pages WHERE slug = ?", [slug]);
+      return res.status(201).json({ id: rows[0].id, slug: rows[0].slug, content: JSON.parse(rows[0].content || "{}") });
+    }
+    await pool.query("UPDATE pages SET content = ? WHERE slug = ?", [contentStr, slug]);
+    const [rows] = await pool.query("SELECT * FROM pages WHERE slug = ?", [slug]);
+    res.json({ id: rows[0].id, slug: rows[0].slug, content: JSON.parse(rows[0].content || "{}") });
+  } catch (err) {
+    console.error("Admin page update error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
